@@ -35,16 +35,17 @@ def main() -> None:
 
     # STATION 1 - Valid Data
     try:
-        station2 = SpaceStation(
-                station_id="ISS001",
-                name="International Space Station",
-                crew_size=6,
-                power_level=85.5,
-                oxygen_level=92.3,
-                last_maintenance=datetime.now(),
-                # last_maintenance="2026-06-29T00:00:00"
-                )
-        print_station(station2)
+        station1 = SpaceStation(
+            station_id="ISS001",
+            name="International Space Station",
+            crew_size=6,
+            power_level=85.5,
+            oxygen_level=92.3,
+            last_maintenance=datetime.now(),
+            # last_maintenance="2026-06-29T00:00:00"
+            # notes="All systems nominal"
+            )
+        print_station(station1)
         print("\n========================================")
 
     except ValidationError as error:
@@ -53,18 +54,19 @@ def main() -> None:
 
     # STATION 2 - Invalid data
     try:
-        station3 = SpaceStation(
-                station_id="TMO001",
-                name="Titan Mining Outpost",
-                # crew_size=20,
-                crew_size=26,
-                power_level=95.5,
-                # oxygen_level=62.3,
-                oxygen_level=120.9,
-                last_maintenance=datetime.now(),
-                # last_maintenance="2026-04-25T00:00:00"
-                )
-        print_station(station3)
+        station2 = SpaceStation(
+            station_id="TMO001",
+            name="Titan Mining Outpost",
+            # crew_size=20,
+            crew_size=26,
+            power_level=95.5,
+            # oxygen_level=62.3,
+            oxygen_level=120.9,
+            last_maintenance=datetime.now(),
+            # last_maintenance="2026-04-25T00:00:00"
+            # notes="Scheduled maintenance completed"
+            )
+        print_station(station2)
         print("\n========================================")
 
     except ValidationError as error:
@@ -82,9 +84,10 @@ def main() -> None:
     #         "last_maintenance": datetime.now(),
     #         # "last_maintenance": "2024-02-17T00:00:00",
     #         "is_operational": False
+    #         notes="Power system requires inspection"
     #     }
-    #     station1 = SpaceStation(**external_data)
-    #     print_station(station1)
+    #     station3 = SpaceStation(**external_data)
+    #     print_station(station3)
     #     print("\n========================================")
 
     # except ValidationError as error:
@@ -94,12 +97,9 @@ def main() -> None:
 
 if __name__ == '__main__':
 
-    # create a virtaul env first:
-    # virtualenv space_env
-    # and then activate
-    # source space_env/bin/activate
-    # install pydantic:
-    # pip install pydantic
-    # validate the version:
+    # Setup:
+    # python3 -m venv .venv
+    # source .venv/bin/activate
+    # pip install "pydantic>=2,<3"
     # pip show pydantic
     main()
