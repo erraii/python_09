@@ -59,10 +59,10 @@ def main() -> None:
             name="Titan Mining Outpost",
             # crew_size=20,
             crew_size=26,
-            power_level=95.5,
+            power_level=-5.8,
             # oxygen_level=62.3,
             oxygen_level=120.9,
-            last_maintenance=datetime.now(),
+            last_maintenance="5 July 2345",
             # last_maintenance="2026-04-25T00:00:00"
             # notes="Scheduled maintenance completed"
             )
@@ -71,7 +71,8 @@ def main() -> None:
 
     except ValidationError as error:
         print("Expected validation error:")
-        print(error.errors()[0]["msg"])
+        for each in error.errors():
+            print(f"{each['loc'][0]}: {each['msg']}")
 
     # # STATION 3 - Valid, attribute init with with dictionary
     # try:
