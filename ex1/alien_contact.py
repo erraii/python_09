@@ -24,16 +24,20 @@ class AlienContact(BaseModel):
 
     @model_validator(mode='after')
     def validate_contact(self) -> Self:
+        errors: list[str] = []
+
         if self.contact_id[:2] != "AC":
-            raise ValueError('Contact ID must start with "AC"')
+            errors.append('Contact ID must start with "AC"')
         if self.contact_type == ContactType.physical and self.is_verified is not True:
-            raise ValueError("Physical contact reports must be verified")
+            errors.append("Physical contact reports must be verified")
         if self.contact_type == ContactType.telepathic and self.witness_count < 3:
-            raise ValueError(
-                "Telepathic contact requires at least 3 witnesses")
+            errors.append("Telepathic contact requires at least 3 witnesses")
         if self.signal_strength > 7.0 and self.message_received is None:
-            raise ValueError(
-                "Strong signals (> 7.0) should include received messages")
+            errors.append("Strong signals (> 7.0) should include received messages")
+
+        if errors:
+            raise ValueError("\n".join(errors))
+
         return self
 
 
@@ -78,7 +82,7 @@ def main():
     print("\n========================================")
     try:
         contact1 = AlienContact(
-            contact_id="AC_2026_001",
+            contact_id="Ac_2026_001",
             timestamp=datetime.now(),
             location="Antarctic Research Station",
             contact_type=ContactType.telepathic,
