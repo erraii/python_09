@@ -1,5 +1,5 @@
-from pydantic import BaseModel, Field, ValidationError
 from datetime import datetime
+from pydantic import BaseModel, Field, ValidationError
 
 
 class SpaceStation(BaseModel):
@@ -26,7 +26,7 @@ def print_station(station: SpaceStation) -> None:
     else:
         print("Status: Maintenance")
     if station.notes:
-        print(f"notes: {station.notes}")
+        print(f"Notes: {station.notes}")
 
 
 def main() -> None:
@@ -50,7 +50,11 @@ def main() -> None:
 
     except ValidationError as error:
         print("Expected validation error:")
-        print(error.errors()[0]["msg"])
+        for each in error.errors():
+            if each["loc"]:
+                print(f"{each['loc'][0]}: {each['msg']}")
+            else:
+                print(each["msg"].removeprefix("Value error, "))
 
     # STATION 2 - Invalid data
     try:
@@ -62,7 +66,7 @@ def main() -> None:
             power_level=-5.8,
             # oxygen_level=62.3,
             oxygen_level=120.9,
-            last_maintenance="5 July 2345",
+            last_maintenance=datetime.now(),
             # last_maintenance="2026-04-25T00:00:00"
             # notes="Scheduled maintenance completed"
             )
@@ -72,7 +76,10 @@ def main() -> None:
     except ValidationError as error:
         print("Expected validation error:")
         for each in error.errors():
-            print(f"{each['loc'][0]}: {each['msg']}")
+            if each["loc"]:
+                print(f"{each['loc'][0]}: {each['msg']}")
+            else:
+                print(each["msg"].removeprefix("Value error, "))
 
     # # STATION 3 - Valid, attribute init with with dictionary
     # try:
@@ -85,7 +92,7 @@ def main() -> None:
     #         "last_maintenance": datetime.now(),
     #         # "last_maintenance": "2024-02-17T00:00:00",
     #         "is_operational": False
-    #         notes="Power system requires inspection"
+    #         "notes": "Power system requires inspection"
     #     }
     #     station3 = SpaceStation(**external_data)
     #     print_station(station3)
@@ -101,6 +108,7 @@ if __name__ == '__main__':
     # Setup:
     # python3 -m venv .venv
     # source .venv/bin/activate
-    # pip install "pydantic>=2,<3"
-    # pip show pydantic
+    # python -m pip install pydantic
+    # python -m pip show pydantic
+    # python -m pip install mypy
     main()
