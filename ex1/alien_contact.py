@@ -1,14 +1,15 @@
+from datetime import datetime
+from enum import Enum
+
 from pydantic import BaseModel, Field, model_validator, ValidationError
 from typing_extensions import Self
-from enum import Enum
-from datetime import datetime
 
 
-class ContactType(Enum):
-    radio = 1
-    visual = 2
-    physical = 3
-    telepathic = 4
+class ContactType(str, Enum):
+    radio = "radio"
+    visual = "visual"
+    physical = "physical"
+    telepathic = "telepathic"
 
 
 class AlienContact(BaseModel):
@@ -26,7 +27,7 @@ class AlienContact(BaseModel):
     def validate_contact(self) -> Self:
         errors: list[str] = []
 
-        if self.contact_id[:2] != "AC":
+        if not self.contact_id.startswith("AC"):
             errors.append('Contact ID must start with "AC"')
         if (
             self.contact_type == ContactType.physical
@@ -48,24 +49,24 @@ class AlienContact(BaseModel):
         return self
 
 
-def print_contact(AC: AlienContact) -> None:
+def print_contact(contact: AlienContact) -> None:
     print("Valid contact report:")
-    print(f"ID: {AC.contact_id}")
-    print(f"Type: {AC.contact_type.name}")
-    print(f"Location: {AC.location}")
-    print(f"Signal: {AC.signal_strength}/10")
-    print(f"Duration: {AC.duration_minutes} minutes")
-    print(f"Witnesses: {AC.witness_count}")
-    print(f"Contact Time: {AC.timestamp.strftime('%d/%m/%Y')}")
-    if AC.message_received:
-        print(f"Message: {AC.message_received}")
-    if AC.is_verified:
+    print(f"ID: {contact.contact_id}")
+    print(f"Type: {contact.contact_type.value}")
+    print(f"Location: {contact.location}")
+    print(f"Signal: {contact.signal_strength}/10")
+    print(f"Duration: {contact.duration_minutes} minutes")
+    print(f"Witnesses: {contact.witness_count}")
+    print(f"Contact Time: {contact.timestamp.strftime('%d/%m/%Y')}")
+    if contact.message_received:
+        print(f"Message: {contact.message_received}")
+    if contact.is_verified:
         print("Report: Verified")
     else:
         print("Report: Not Verified")
 
 
-def main():
+def main() -> None:
 
     print("\nAlien Contact Log Validation")
     print("========================================")
@@ -78,13 +79,16 @@ def main():
             signal_strength=8.8,
             duration_minutes=2,
             witness_count=5,
-            message_received="Wow!: 6EQUJ5",
+            message_received="Wow!-> 6EQUJ5",
             is_verified=True
         )
         print_contact(contact1)
     except ValidationError as error:
         for each in error.errors():
-            print(f"{each['msg']}")
+            if each["loc"]:
+                print(f"{each['loc'][0]}: {each['msg']}")
+            else:
+                print(each["msg"].removeprefix("Value error, "))
 
     print("\n========================================")
     try:
@@ -102,7 +106,10 @@ def main():
     except ValidationError as error:
         for each in error.errors():
             print("Expected validation error:")
-            print(f"{each['msg']}")
+            if each["loc"]:
+                print(f"{each['loc'][0]}: {each['msg']}")
+            else:
+                print(each["msg"].removeprefix("Value error, "))
 
 
 if __name__ == '__main__':
