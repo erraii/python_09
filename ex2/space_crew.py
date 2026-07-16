@@ -1,15 +1,16 @@
+from datetime import datetime
+from enum import Enum
+
 from pydantic import BaseModel, Field, model_validator, ValidationError
 from typing_extensions import Self
-from enum import Enum
-from datetime import datetime
 
 
-class CrewRanks(Enum):
-    cadet = 1
-    officer = 2
-    lieutenant = 3
-    captain = 4
-    commander = 5
+class CrewRanks(str, Enum):
+    cadet = "cadet"
+    officer = "officer"
+    lieutenant = "lieutenant"
+    captain = "captain"
+    commander = "commander"
 
 
 class CrewMember(BaseModel):
@@ -33,7 +34,7 @@ class SpaceMission(BaseModel):
     budget_millions: float = Field(ge=1.0, le=10000.0)
 
     @model_validator(mode='after')
-    def validate_contact(self) -> Self:
+    def validate_mission(self) -> Self:
         errors: list[str] = []
         leader_satisfied: bool = False
         experienced_member = 0
@@ -52,13 +53,16 @@ class SpaceMission(BaseModel):
             if not member.is_active:
                 not_active_found = True
 
-        if self.mission_id[:1] != "M":
+        if not self.mission_id.startswith("M"):
             errors.append('Mission ID must start with "M"')
         if not leader_satisfied:
-            errors.append("Must have at least one Commander or Captain")
+            errors.append(
+                "Mission must have at least one "
+                "Commander or Captain"
+            )
         if (
             self.duration_days > 365 and
-            total_member / experienced_member > 2.0
+            experienced_member * 2 < total_member
         ):
             errors.append(
                 "Long missions (> 365 days) need 50% "
@@ -73,28 +77,28 @@ class SpaceMission(BaseModel):
         return self
 
 
-def print_contact(SM: SpaceMission) -> None:
-    print("Valid mission created::")
-    print(f"Mission: {SM.mission_name}")
-    print(f"ID: {SM.mission_id}")
-    print(f"Destination: {SM.destination}")
-    print(f"Duration: {SM.duration_days} days")
-    print(f"Budget: ${SM.budget_millions}M")
-    print(f"Crew size: {len(SM.crew)}")
+def print_mission(mission: SpaceMission) -> None:
+    print("Valid mission created:")
+    print(f"Mission: {mission.mission_name}")
+    print(f"ID: {mission.mission_id}")
+    print(f"Destination: {mission.destination}")
+    print(f"Duration: {mission.duration_days} days")
+    print(f"Budget: ${mission.budget_millions}M")
+    print(f"Crew size: {len(mission.crew)}")
     print("Crew members:")
-    for member in SM.crew:
+    for member in mission.crew:
         print(
-            f"- {member.name} ({member.rank.name}) - "
+            f"- {member.name} ({member.rank.value}) - "
             f"{member.specialization}"
         )
 
 
-def main():
+def main() -> None:
 
     print("\nSpace Mission Crew Validation")
     print("========================================")
     try:
-        CM1 = CrewMember(
+        crew_member1 = CrewMember(
             member_id="CM0001",
             name="Sarah Connor",
             rank=CrewRanks.commander,
@@ -104,7 +108,7 @@ def main():
             is_active=True
         )
 
-        CM2 = CrewMember(
+        crew_member2 = CrewMember(
             member_id="CM0002",
             name="John Smith",
             rank=CrewRanks.lieutenant,
@@ -114,7 +118,7 @@ def main():
             is_active=True
         )
 
-        CM3 = CrewMember(
+        crew_member3 = CrewMember(
             member_id="CM0003",
             name="Alice Johnson",
             rank=CrewRanks.officer,
@@ -124,24 +128,27 @@ def main():
             is_active=True
         )
 
-        SM1 = SpaceMission(
+        mission1 = SpaceMission(
             mission_id="M2024_MARS",
             mission_name="Mars Colony Establishment",
             destination="Mars",
             launch_date=datetime.now(),
             duration_days=900,
-            crew=[CM1, CM2, CM3],
+            crew=[crew_member1, crew_member2, crew_member3],
             mission_status="in planning",
             budget_millions=2500.0
         )
-        print_contact(SM1)
+        print_mission(mission1)
     except ValidationError as error:
         for each in error.errors():
-            print(f"{each['msg']}")
+            if each["loc"]:
+                print(f"{each['loc'][0]}: {each['msg']}")
+            else:
+                print(each["msg"].removeprefix("Value error, "))
 
     print("\n========================================")
     try:
-        CM4 = CrewMember(
+        crew_member4 = CrewMember(
             member_id="CM0004",
             name="Thomas Brown",
             rank=CrewRanks.cadet,
@@ -151,21 +158,24 @@ def main():
             is_active=True
         )
 
-        SM2 = SpaceMission(
+        mission2 = SpaceMission(
             mission_id="M2026_Europa",
             mission_name="Europa Research Data Collection",
             destination="Europa",
             launch_date=datetime.now(),
             duration_days=1001,
-            crew=[CM2, CM3, CM4],
+            crew=[crew_member2, crew_member3, crew_member4],
             mission_status="in planning",
             budget_millions=5500.0
         )
-        print_contact(SM2)
+        print_mission(mission2)
     except ValidationError as error:
         for each in error.errors():
             print("Expected validation error:")
-            print(f"{each['msg']}")
+            if each["loc"]:
+                print(f"{each['loc'][0]}: {each['msg']}")
+            else:
+                print(each["msg"].removeprefix("Value error, "))
 
 
 if __name__ == '__main__':
